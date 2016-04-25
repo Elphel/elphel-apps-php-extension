@@ -1,0 +1,13 @@
+// $Id$
+// vim:ft=javascript
+
+// If your extension references something external, use ARG_WITH
+// ARG_WITH("elphel", "for elphel support", "no");
+
+// Otherwise, use ARG_ENABLE
+// ARG_ENABLE("elphel", "enable elphel support", "no");
+
+if (PHP_ELPHEL != "no") {
+	EXTENSION("elphel", "elphel.c");
+}
+
