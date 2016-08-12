@@ -1,0 +1,9 @@
+html/*
+.project
+.cproject
+.externalToolBuilders
+.settings
+*.directory
+attic/*
+php
+

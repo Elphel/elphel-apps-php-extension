@@ -36,12 +36,15 @@ if test "$PHP_ELPHEL" != "no"; then
   dnl fi
   dnl
   dnl if test -z "$ELPHEL_DIR"; then
-  dnl   AC_MSG_RESULT([not found])
-  dnl   AC_MSG_ERROR([Please reinstall the elphel distribution])
+  dnl    AC_MSG_RESULT([not found])
+  dnl    AC_MSG_ERROR([Please reinstall the elphel distribution])
   dnl fi
 
   dnl # --with-elphel -> add include path
-  dnl PHP_ADD_INCLUDE($ELPHEL_DIR/include)
+ELPHEL_DIR=$abs_srcdir/ext/elphel
+UAPI_DIR=$PKG_CONFIG_SYSROOT_DIR/usr/include-uapi
+PHP_ADD_INCLUDE($ELPHEL_DIR/include)
+PHP_ADD_INCLUDE($UAPI_DIR)
 
   dnl # --with-elphel -> check for lib and symbol presence
   dnl LIBNAME=elphel # you may want to change this
