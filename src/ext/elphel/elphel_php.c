@@ -573,6 +573,7 @@ PHP_FUNCTION(elphel_get_state)
 
 /**
  * @brief return selected (by integer index) framepars structure  (struct framepars_t) as a binary string
+ * @param port - sensor port (0..3)
  * @param index - frame index (0..7). -1 - return func2call page instead, -2 - globalPars
  * @return NULL - error, otherwise a string with  (struct framepars_t)
  *
@@ -1241,11 +1242,12 @@ PHP_FUNCTION(elphel_gamma_get_raw)
 
 /**
  * @brief return selected (by integer index) cached histogram structure  (struct histogram_stuct_t) as a binary string
+ * @param port - sensor port (0..3)
+ * @param sub_chn - sensor sub-channel (for mux-ed sensors), NC393 initially ignored !
  * @param index - histogram cache index (or frame number, 3 lsb will be used)
  * @return NULL - error, otherwise a string with  (struct histogram_stuct_t)
  *
  */
-
 
 PHP_FUNCTION(elphel_histogram_get_raw)
 {
@@ -2246,9 +2248,8 @@ PHP_FUNCTION(elphel_get_fpga_time) {
     dtime= ELPHEL_GLOBALPARS(0, G_SECONDS) + 0.000001*dtime;
     RETURN_DOUBLE(dtime);
 }
-
+#if 0
 static struct framepars_all_t test_structure;
-
 static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
 {
     int port;
@@ -2280,10 +2281,10 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
         elphel_globals->multiSensIndex[port] =     elphel_globals->frameParsAll[port]->multiSensIndex;
         elphel_globals->multiSensRvrsIndex[port] = elphel_globals->frameParsAll[port]->multiSensRvrsIndex; /// not yet used
     }
-
 }
+#else
 
-static void php_elphel_init_globals_bkp(zend_elphel_globals *elphel_globals)
+static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
 {
     const char *frameparsPaths[] = { DEV393_PATH(DEV393_FRAMEPARS0), DEV393_PATH(DEV393_FRAMEPARS1),
                                      DEV393_PATH(DEV393_FRAMEPARS2), DEV393_PATH(DEV393_FRAMEPARS3)};
@@ -2404,6 +2405,7 @@ static void php_elphel_init_globals_bkp(zend_elphel_globals *elphel_globals)
     }
     elphel_globals->exif_size=0;
 }
+#endif
 
 PHP_RINIT_FUNCTION(elphel)
 {
