@@ -71,6 +71,7 @@ ZEND_END_MODULE_GLOBALS(elphel)
 #define ELPHEL_GLOBALPARS(p, x) (((unsigned long *) ELPHEL_G(globalPars[p]))[x-FRAMEPAR_GLOBALS])
 #endif
 PHP_FUNCTION(elphel_get_frame);      /// current absolute frame number (includes those that are not compressed)
+PHP_FUNCTION(elphel_get_compressed_frame);
 PHP_FUNCTION(elphel_skip_frames);    /// skip some frames (includes those that are not compressed) - will work even if no frames are compressed
 PHP_FUNCTION(elphel_wait_frame_abs); /// wait for absolute frame number (includes those that are not compressed)
 PHP_FUNCTION(elphel_framepars_get_raw);
