@@ -210,6 +210,7 @@
 #include <errno.h>
 #include "php.h"
 #include "php_ini.h"  /* for php.ini processing */
+#include "ext/standard/info.h" /* for php_info_print_table_* */
 #include "elphel_php.h"
 
 
@@ -1272,9 +1273,13 @@ PHP_FUNCTION(elphel_histogram_get_raw)
     }
     if ((port <0)    || (port >=   SENSOR_PORTS)) RETURN_NULL ();
     if ((sub_chn <0) || (sub_chn >= MAX_SENSORS)) RETURN_NULL ();
-    if (frame<0) frame=lseek((int) ELPHEL_G( fd_fparmsall[port]), 0, SEEK_CUR );
+//    if (frame<0) frame=lseek((int) ELPHEL_G( fd_fparmsall[port]), 0, SEEK_CUR );
+    if (frame <0) {
+        frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
+    }
+
     needed &= 0xfff;
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 << port) + (1 << sub_chn), SEEK_END); /// specify port/sub-channel is needed
+    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); /// wait for all histograms, not just Y (G1)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); /// mask out needed raw (fpga) bits
     index=lseek(ELPHEL_G(fd_histogram_cache), frame, SEEK_SET);    /// request histograms for frame=frame, wait until available if needed
@@ -1327,10 +1332,15 @@ PHP_FUNCTION(elphel_histogram_get)
     if ((port <0)    || (port >=   SENSOR_PORTS)) RETURN_NULL ();
     if ((sub_chn <0) || (sub_chn >= MAX_SENSORS)) RETURN_NULL ();
 
+    //    if (frame<0) frame=lseek((int) ELPHEL_G( fd_fparmsall[port]), 0, SEEK_CUR );
+    if (frame <0) {
+        frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
+    }
     needed &= 0xfff;
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 << port) + (1 << sub_chn), SEEK_END); /// specify port/sub-channel is needed
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); /// wait for all histograms, not just Y (G1)
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); /// mask out needed raw (fpga) bits
+    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
+
+    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); // / wait for all histograms, not just Y (G1)
+    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); // / mask out needed raw (fpga) bits
     index=lseek(ELPHEL_G(fd_histogram_cache), frame, SEEK_SET);    /// request histograms for frame=frame, wait until available if needed
     if (index <0) {
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%d, needed=0x%x)",frame,needed);
@@ -1350,8 +1360,8 @@ PHP_FUNCTION(elphel_histogram_get)
     memcpy((void *) frame_histogram_structure, &(((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index]),sizeof(struct histogram_stuct_t));
     /// verify that histogram is still valid
     if (frame != ((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index].frame ) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Frame changed while retrieving histograms (frame requested=%d, current=%d)",
-                frame, (int)((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index].frame);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Frame changed while retrieving histograms (frame requested=%d, received=%d, index=%d)",
+                frame, (int)((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index].frame, index);
         RETURN_NULL ();
         efree (frame_histogram_structure);
     }
@@ -1497,7 +1507,18 @@ PHP_FUNCTION(elphel_get_circbuf_pointers) {
             read(ELPHEL_G(fd_exif[port]), &frame_be, 4);
             ///... and add it to the output array
             add_assoc_long(image_pointers, "frame", (long) __cpu_to_be32(frame_be));
-
+#define DEBUG_BYRSH
+#ifdef DEBUG_BYRSH
+            int frame=  (int)  __cpu_to_be32(frame_be);
+            int past_index=   frame & PASTPARS_SAVE_ENTRIES_MASK;
+            add_assoc_long(image_pointers, "dbg_comp_frame16",      ((struct framepars_past_t *) ELPHEL_G(pastPars[port]))[past_index].past_pars[PARS_SAVE_COPY + 0]);
+            add_assoc_long(image_pointers, "dbg_comp_aframe",      ((struct framepars_past_t *) ELPHEL_G(pastPars[port]))[past_index].past_pars[PARS_SAVE_COPY + 1]);
+            add_assoc_long(image_pointers, "dbg_cmprs_mode",      ((struct framepars_past_t *) ELPHEL_G(pastPars[port]))[past_index].past_pars[PARS_SAVE_COPY + 2]);
+            add_assoc_long(image_pointers, "dbg_past_pars",      ((struct framepars_past_t *) ELPHEL_G(pastPars[port]))[past_index].past_pars[PARS_SAVE_COPY + 3]);
+            add_assoc_long(image_pointers, "dbg_frame",          frame);
+            add_assoc_long(image_pointers, "dbg_past_index",      past_index);
+            add_assoc_long(image_pointers, "dbg_past_pars_0",     ((struct framepars_past_t *) ELPHEL_G(pastPars[port]))[past_index].past_pars[0]);
+#endif
 //            add_assoc_long(image_pointers, "dbg_exifPageStart",      exifPageStart);
 //            add_assoc_long(image_pointers, "dbg_displacementInPage", displacementInPage);
 //            add_assoc_long(image_pointers, "dbg_frame_be",           frame_be);
@@ -2066,12 +2087,12 @@ PHP_FUNCTION(elphel_reverse_gamma)
  * @param needreverse 0 if only cumulative histogram is needed, >0 if the reverse is also needed
  * @return <0 if histogram can not be found fo the specified frame (i.e. too late), otherwise it is an index in histogram cache.
  */
-int get_histogram_index (long port, long sub_chn, long color,long frame, long needreverse) { /// histogram is availble for previous frame, not for the current one
+int get_histogram_index (long port, long sub_chn, long color,long frame, long needreverse) { /// histogram is available for previous frame, not for the current one
     long hist_index;
     if ((color<0)    || (color >=   4))           return -1; /// wrong color
     if ((port <0)    || (port >=   SENSOR_PORTS)) return -1;
     if ((sub_chn <0) || (sub_chn >= MAX_SENSORS)) return -1;
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 << port) + (1 << sub_chn), SEEK_END); /// specify port/sub-channel is needed
+    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
     if (color == COLOR_Y_NUMBER) lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_Y, SEEK_END); /// wait for just Y (G1)
     else                         lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); /// wait for all histograms, not just Y (G1)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + ((1 << color) << (needreverse? 8:4)), SEEK_END); /// specify what color is needed and if reverse is needed
@@ -2231,7 +2252,9 @@ PHP_FUNCTION(elphel_fpga_read)
     }
     RETURN_LONG(data);
 #else
-    RETURN_LONG(-1);
+    php_error_docref(NULL TSRMLS_CC, E_ERROR, "elphel_fpga_read() not implemented");
+    return ;
+//    RETURN_LONG(-1);
 #endif
 }
 
@@ -2255,7 +2278,10 @@ PHP_FUNCTION(elphel_fpga_write)
         return ;
     }
 #endif
-    RETURN_NULL();
+    php_error_docref(NULL TSRMLS_CC, E_ERROR, "elphel_fpga_write() not implemented");
+    return ;
+//
+//    RETURN_NULL();
 }
 
 
