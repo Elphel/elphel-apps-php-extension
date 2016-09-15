@@ -8,10 +8,11 @@
 #warning Not using TSRM.h
 #endif
 
-#include "elphel/c313a.h"
-#include "elphel/exifa.h"
-#include <autoexp.h>
+#include <elphel/c313a.h>
+#include <elphel/exifa.h>
 #include <elphel/x393_devices.h>
+//#include <autoexp.h>
+//#include <elphel/x393_devices.h>
 
 ZEND_BEGIN_MODULE_GLOBALS(elphel)
 int fd_exif[SENSOR_PORTS];
