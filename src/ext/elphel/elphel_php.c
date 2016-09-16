@@ -1267,6 +1267,7 @@ PHP_FUNCTION(elphel_histogram_get_raw)
     long frame=-1;
     long needed=0xfff;
     long index;
+    long total_hist_entries;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll|ll", &port, &sub_chn, &needed, &frame) == FAILURE) {
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong index");
         RETURN_NULL ();
@@ -1279,7 +1280,7 @@ PHP_FUNCTION(elphel_histogram_get_raw)
     }
 
     needed &= 0xfff;
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
+    total_hist_entries = lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); /// wait for all histograms, not just Y (G1)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); /// mask out needed raw (fpga) bits
     index=lseek(ELPHEL_G(fd_histogram_cache), frame, SEEK_SET);    /// request histograms for frame=frame, wait until available if needed
@@ -1287,11 +1288,10 @@ PHP_FUNCTION(elphel_histogram_get_raw)
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%d, needed=0x%x)",frame,needed);
         RETURN_NULL ();
     }
-    if (index >= HISTOGRAM_CACHE_NUMBER) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%d, index=%d",frame, index);
+    if (index >= total_hist_entries) {
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%d, index=%d >= %d (total_hist_entries)",frame, index, total_hist_entries);
         RETURN_NULL ();
     }
-    //  index &= (HISTOGRAM_CACHE_NUMBER -1);
     packed_histogram_structure= (char*) emalloc (sizeof(struct histogram_stuct_t));
     if (!packed_histogram_structure) {
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "emalloc error");
@@ -1324,6 +1324,7 @@ PHP_FUNCTION(elphel_histogram_get)
     long frame=-1;
     long needed=0xfff;
     long index;
+    long total_hist_entries;
     int i;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll|ll", &port, &sub_chn, &needed, &frame) == FAILURE) {
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong index");
@@ -1337,7 +1338,7 @@ PHP_FUNCTION(elphel_histogram_get)
         frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
     }
     needed &= 0xfff;
-    lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
+    total_hist_entries= lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
 
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); // / wait for all histograms, not just Y (G1)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); // / mask out needed raw (fpga) bits
@@ -1346,8 +1347,8 @@ PHP_FUNCTION(elphel_histogram_get)
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%d, needed=0x%x)",frame,needed);
         RETURN_NULL ();
     }
-    if (index >= HISTOGRAM_CACHE_NUMBER) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%d, index=%d",frame, index);
+    if (index >= total_hist_entries) {
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%d, index=%d >= %d (total_hist_entries)",frame, index, total_hist_entries);
         RETURN_NULL ();
     }
 
@@ -2368,6 +2369,8 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
     const char *exifMetaPaths[] =  { DEV393_PATH(DEV393_EXIF_META0), DEV393_PATH(DEV393_EXIF_META1),
                                      DEV393_PATH(DEV393_EXIF_META2), DEV393_PATH(DEV393_EXIF_META3)};
 //DEV393_PATH(DEV393_CIRCBUF0
+    int total_hist_entries;
+
     int port;
     //! open "/dev/sensorpars" and mmap array - only once
     for (port = 0; port < SENSOR_PORTS; port++){
@@ -2424,8 +2427,9 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Can not open file %s",DEV393_PATH(DEV393_HISTOGRAM));
         return ;
     }
+    total_hist_entries = lseek(elphel_globals->fd_histogram_cache, LSEEK_HIST_SET_CHN + 0, SEEK_END); /// specify port/sub-channel is needed
     //! now try to mmap
-    elphel_globals->histogram_cache = (struct histogram_stuct_t *) mmap(0, sizeof (struct histogram_stuct_t) * HISTOGRAM_CACHE_NUMBER , PROT_READ, MAP_SHARED, elphel_globals->fd_histogram_cache, 0);
+    elphel_globals->histogram_cache = (struct histogram_stuct_t *) mmap(0, sizeof (struct histogram_stuct_t) * total_hist_entries, PROT_READ, MAP_SHARED, elphel_globals->fd_histogram_cache, 0);
     if((int)elphel_globals->histogram_cache == -1) {
         elphel_globals->histogram_cache=NULL;
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error in mmap histogram_cache");
