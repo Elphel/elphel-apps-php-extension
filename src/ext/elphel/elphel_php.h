@@ -93,6 +93,7 @@ PHP_FUNCTION(elphel_histogram_get_raw);
 PHP_FUNCTION(elphel_histogram_get);
 
 PHP_FUNCTION(elphel_get_state); /// compatibility with old code
+PHP_FUNCTION(elphel_num_sensors);
 
 PHP_FUNCTION(elphel_compressor_reset); /// these elphel_compressor_*() functions are for compatibility. Reset will now just stop, not actually reset
 PHP_FUNCTION(elphel_compressor_run);

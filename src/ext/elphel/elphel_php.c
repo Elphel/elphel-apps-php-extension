@@ -237,6 +237,7 @@ static zend_function_entry elphel_functions[] = {
         PHP_FE(elphel_histogram_get_raw, NULL)
         PHP_FE(elphel_histogram_get, NULL)
         PHP_FE(elphel_get_state, NULL)
+        PHP_FE(elphel_num_sensors, NULL)
 
         PHP_FE(elphel_compressor_reset, NULL)
         PHP_FE(elphel_compressor_run, NULL)
@@ -561,6 +562,13 @@ PHP_FUNCTION(elphel_test)
     long result= ELPHEL_GLOBALPARS(0, G_THIS_FRAME);
     RETURN_LONG(result);
 } 
+
+/** Return the number of sensor ports */
+PHP_FUNCTION(elphel_num_sensors)
+{
+	long result = SENSOR_PORTS;
+    RETURN_LONG(result);
+}
 
 
 ///NOTE: Just for compatibility with older code
