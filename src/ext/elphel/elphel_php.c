@@ -2378,7 +2378,7 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
                                      DEV393_PATH(DEV393_EXIF_META2), DEV393_PATH(DEV393_EXIF_META3)};
 //DEV393_PATH(DEV393_CIRCBUF0
     int total_hist_entries;
-
+    int i;
     int port;
     //! open "/dev/sensorpars" and mmap array - only once
     for (port = 0; port < SENSOR_PORTS; port++){
@@ -2435,12 +2435,16 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Can not open file %s",DEV393_PATH(DEV393_HISTOGRAM));
         return ;
     }
-    total_hist_entries = lseek(elphel_globals->fd_histogram_cache, LSEEK_HIST_SET_CHN + 0, SEEK_END); /// specify port/sub-channel is needed
+    for (i=0;i<16;i++) {
+        // Channel 0 is not always present (lseek returns -1)
+        total_hist_entries = lseek(elphel_globals->fd_histogram_cache, LSEEK_HIST_SET_CHN + i, SEEK_END); /// specify port/sub-channel is needed
+        if (total_hist_entries>0) break;
+    }
     //! now try to mmap
     elphel_globals->histogram_cache = (struct histogram_stuct_t *) mmap(0, sizeof (struct histogram_stuct_t) * total_hist_entries, PROT_READ, MAP_SHARED, elphel_globals->fd_histogram_cache, 0);
     if((int)elphel_globals->histogram_cache == -1) {
         elphel_globals->histogram_cache=NULL;
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error in mmap histogram_cache");
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error in mmap histogram_cache, total_hist_entries=0x%x",total_hist_entries);
         close (elphel_globals->fd_histogram_cache);
         elphel_globals->fd_histogram_cache = -1;
         return ;
