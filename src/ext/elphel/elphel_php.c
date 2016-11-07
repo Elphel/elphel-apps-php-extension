@@ -197,6 +197,7 @@
  *!
  */
 
+#define DELAY_HISTOGRAMS_INIT 1
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -292,7 +293,7 @@ PHP_INI_END()
 //!call before any access to sensor parameters/functions
 static void init_sens() {
 }
-
+static void php_elphel_init_histograms(void);
 /**
  * @brief See if the name ends with __A,__B,__c,__a,__b.__c
  * @param name constant name, possibly ending with a suffix __A,__B,__c,__a,__b or __c
@@ -736,13 +737,14 @@ PHP_FUNCTION(elphel_get_P_arr)
  * @brief common part of elphel_set_P_value() and elphel_compressor_*()
  * @param addr    register address (with possible flags)
  * @param data    data to write
- * @param frame   frame to write (<0) - use current + FRAME_DEAFAULT_AHEAD
+ * @param frame   frame to write (-1 - use current + FRAME_DEAFAULT_AHEAD, < -1: use ASAP
  * @param flags   additional flags (0) - none
  * @return <0 - -errno ( error), otherwise frame used
  */
 
 long elphel_set_P_value_common(long port, long addr, long data, long frame, long flags) {
     unsigned long write_data[4];
+    unsigned long uframe;
     long maddr;
     ///shortcut for global parameters - directly mmaped
     if ((port < 0) || (port > SENSOR_PORTS))
@@ -755,22 +757,22 @@ long elphel_set_P_value_common(long port, long addr, long data, long frame, long
         ELPHEL_GLOBALPARS(port, maddr)=data;
         return 0;
     }
-    if (frame <0) {
-        frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME) + FRAME_DEAFAULT_AHEAD;
-    }
+    if      (frame == -1)  uframe = ELPHEL_GLOBALPARS(port, G_THIS_FRAME) + FRAME_DEAFAULT_AHEAD; // old: use earliest frame
+    else if (frame == -2)  uframe = 0xffffffffL; // (new nc393: use ASAP mode)
+    else                   uframe = (unsigned long) frame;
     flags |= (flags << 16); /// will accept flags both shifted and not shifted
     flags &=0xffff0000;
     if ((addr<0) ||((maddr >= (sizeof (struct framepars_t) >>2)) && ( (addr & 0xff00) != 0xff00 )  )) {
         return -1;
     }
     write_data[0]=FRAMEPARS_SETFRAME;
-    write_data[1]=frame;
+    write_data[1]=uframe;
     write_data[2]= addr | flags;
     write_data[3]= data;
     long rslt=write(ELPHEL_G(fd_fparmsall[port]), write_data, sizeof(write_data));
     //    if (rslt<0) rslt =-errno;
     if (rslt<0) return -errno;
-    if (rslt == sizeof( write_data )) return frame;
+    if (rslt == sizeof( write_data )) return (frame >=0)? frame : 0; // does not work with frame> 0x7fffffff;
     return -1;
 }
 
@@ -1287,6 +1289,10 @@ PHP_FUNCTION(elphel_histogram_get_raw)
         frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
     }
 
+#ifdef DELAY_HISTOGRAMS_INIT
+    if (ELPHEL_G(fd_histogram_cache) <0) php_elphel_init_histograms();
+#endif
+
     needed &= 0xfff;
     total_hist_entries = lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); /// wait for all histograms, not just Y (G1)
@@ -1345,6 +1351,9 @@ PHP_FUNCTION(elphel_histogram_get)
     if (frame <0) {
         frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
     }
+#ifdef DELAY_HISTOGRAMS_INIT
+    if (ELPHEL_G(fd_histogram_cache) <0) php_elphel_init_histograms();
+#endif
     needed &= 0xfff;
     total_hist_entries= lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
 
@@ -2101,6 +2110,9 @@ int get_histogram_index (long port, long sub_chn, long color,long frame, long ne
     if ((color<0)    || (color >=   4))           return -1; /// wrong color
     if ((port <0)    || (port >=   SENSOR_PORTS)) return -1;
     if ((sub_chn <0) || (sub_chn >= MAX_SENSORS)) return -1;
+#ifdef DELAY_HISTOGRAMS_INIT
+    if (ELPHEL_G(fd_histogram_cache) <0) php_elphel_init_histograms();
+#endif
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + (4 * port) + sub_chn, SEEK_END); /// specify port/sub-channel is needed
     if (color == COLOR_Y_NUMBER) lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_Y, SEEK_END); /// wait for just Y (G1)
     else                         lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_WAIT_C, SEEK_END); /// wait for all histograms, not just Y (G1)
@@ -2165,6 +2177,9 @@ PHP_FUNCTION(elphel_histogram)
     if (frame <0) {
         frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
     }
+#ifdef DELAY_HISTOGRAMS_INIT
+    if (!ELPHEL_G(histogram_cache)) php_elphel_init_histograms();
+#endif
     if (((hist_index=get_histogram_index (port, sub_chn, color, frame, 0)))<0) RETURN_LONG (-1);
     llevel=0x10000*dlevel;
     if      (llevel< -0.5) RETURN_LONG(-1) ; /// if input level was ==-1 - error, don't try
@@ -2212,6 +2227,9 @@ PHP_FUNCTION(elphel_reverse_histogram)
     if (frame <0) {
         frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME)-1;
     }
+#ifdef DELAY_HISTOGRAMS_INIT
+    if (!ELPHEL_G(histogram_cache)) php_elphel_init_histograms();
+#endif
     if (((hist_index=get_histogram_index (port, sub_chn, color, frame, 1)))<0) RETURN_LONG (-1);
     ///interpolate
     hist_cumul= &(((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[hist_index].cumul_hist[color<<8]);
@@ -2366,6 +2384,50 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
 }
 #else
 
+static void php_elphel_init_histograms(void){
+    int i, total_hist_entries;
+
+    /// (histogram.c) access to gammas
+//    elphel_globals->histogram_cache = NULL;
+    ELPHEL_G(histogram_cache) = NULL;
+//    elphel_globals->fd_histogram_cache= open(DEV393_PATH(DEV393_HISTOGRAM), O_RDWR); // "/dev/histogram_cache", O_RDWR);
+    ELPHEL_G(fd_histogram_cache)= open(DEV393_PATH(DEV393_HISTOGRAM), O_RDWR); // "/dev/histogram_cache", O_RDWR);
+//    if (elphel_globals->fd_histogram_cache <0) {
+    if (ELPHEL_G(fd_histogram_cache) <0) {
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Can not open file %s",DEV393_PATH(DEV393_HISTOGRAM));
+        return ;
+    }
+    for (i=0;i<16;i++) {
+        // Channel 0 is not always present (lseek returns -1)
+//        total_hist_entries = lseek(elphel_globals->fd_histogram_cache, LSEEK_HIST_SET_CHN + i, SEEK_END); /// specify port/sub-channel is needed
+        total_hist_entries = lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_SET_CHN + i, SEEK_END); /// specify port/sub-channel is needed
+        if (total_hist_entries>0) break;
+    }
+    //! now try to mmap
+//    elphel_globals->histogram_cache = (struct histogram_stuct_t *) mmap(0, sizeof (struct histogram_stuct_t) * total_hist_entries, PROT_READ, MAP_SHARED, elphel_globals->fd_histogram_cache, 0);
+    ELPHEL_G(histogram_cache)= (struct histogram_stuct_t *) mmap(0,
+                                                                 sizeof (struct histogram_stuct_t) * total_hist_entries,
+                                                                 PROT_READ,
+                                                                 MAP_SHARED,
+                                                                 ELPHEL_G(fd_histogram_cache),
+                                                                 0);
+//    ELPHEL_G(histogram_cache)= mmap(0, sizeof (struct histogram_stuct_t) * total_hist_entries, PROT_READ, MAP_SHARED, elphel_globals->fd_histogram_cache, 0);
+//    if((int)elphel_globals->histogram_cache == -1) {
+    if((int) ELPHEL_G(histogram_cache) == -1) {
+//        elphel_globals->histogram_cache=NULL;
+        ELPHEL_G(histogram_cache)=NULL;
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Error in mmap histogram_cache, total_hist_entries=0x%x",total_hist_entries);
+
+//        close (elphel_globals->fd_histogram_cache);
+        close (ELPHEL_G(fd_histogram_cache));
+//        elphel_globals->fd_histogram_cache = -1;
+        ELPHEL_G(fd_histogram_cache) = -1;
+        return ;
+    }
+
+}
+
+
 static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
 {
     const char *frameparsPaths[] = { DEV393_PATH(DEV393_FRAMEPARS0), DEV393_PATH(DEV393_FRAMEPARS1),
@@ -2430,6 +2492,9 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
     ///debug
     /// (histogram.c) access to gammas
     elphel_globals->histogram_cache = NULL;
+#ifdef DELAY_HISTOGRAMS_INIT
+    elphel_globals->fd_histogram_cache= -1;
+#else
     elphel_globals->fd_histogram_cache= open(DEV393_PATH(DEV393_HISTOGRAM), O_RDWR); // "/dev/histogram_cache", O_RDWR);
     if (elphel_globals->fd_histogram_cache <0) {
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Can not open file %s",DEV393_PATH(DEV393_HISTOGRAM));
@@ -2449,7 +2514,7 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
         elphel_globals->fd_histogram_cache = -1;
         return ;
     }
-
+#endif
     //! Now - same for /dev/circbuf
 //    int dbg_i;
     for (port = 0; port < SENSOR_PORTS; port++){
