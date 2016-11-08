@@ -735,14 +735,15 @@ PHP_FUNCTION(elphel_get_P_arr)
 
 /**
  * @brief common part of elphel_set_P_value() and elphel_compressor_*()
- * @param addr    register address (with possible flags)
- * @param data    data to write
- * @param frame   frame to write (-1 - use current + FRAME_DEAFAULT_AHEAD, < -1: use ASAP
- * @param flags   additional flags (0) - none
+ * @param addr      register address (with possible flags)
+ * @param data      data to write
+ * @param frame     frame to write (-1 - use current + FRAME_DEAFAULT_AHEAD, < -1: use ASAP
+ * @param flags     additional flags (0) - none
+ * @param broadcast port mask to simultaneously send same data
  * @return <0 - -errno ( error), otherwise frame used
  */
 
-long elphel_set_P_value_common(long port, long addr, long data, long frame, long flags) {
+long elphel_set_P_value_common(long port, long addr, long data, long frame, long flags, long broadcast) {
     unsigned long write_data[4];
     unsigned long uframe;
     long maddr;
@@ -765,7 +766,7 @@ long elphel_set_P_value_common(long port, long addr, long data, long frame, long
     if ((addr<0) ||((maddr >= (sizeof (struct framepars_t) >>2)) && ( (addr & 0xff00) != 0xff00 )  )) {
         return -1;
     }
-    write_data[0]=FRAMEPARS_SETFRAME;
+    write_data[0]=FRAMEPARS_SETFRAME | ((broadcast << 4) & 0xf0);
     write_data[1]=uframe;
     write_data[2]= addr | flags;
     write_data[3]= data;
@@ -787,11 +788,12 @@ PHP_FUNCTION(elphel_set_P_value)
     long addr;
     long data;
     long frame=-1;
+    long broadcast = 0;
     unsigned long flags=0;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lll|ll", &port, &addr,&data,&frame,&flags) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lll|lll", &port, &addr,&data,&frame,&flags, &broadcast) == FAILURE) {
         RETURN_NULL();
     }
-    if (((frame=elphel_set_P_value_common (port, addr, data, frame, flags))) <0) {
+    if (((frame=elphel_set_P_value_common (port, addr, data, frame, flags, broadcast))) <0) {
         RETURN_NULL();
     }
     RETURN_LONG(frame);
@@ -803,11 +805,12 @@ PHP_FUNCTION(elphel_compressor_reset)
     long port;
     long frame=-1;
     unsigned long flags=-1;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|ll", &port, &frame,&flags) == FAILURE) {
+    long broadcast = 0;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|lll", &port, &frame,&flags,&broadcast) == FAILURE) {
         RETURN_NULL();
     }
     if (flags<0) flags=FRAMEPAIR_FORCE_NEWPROC;
-    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_STOP, frame, flags)))<0) {
+    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_STOP, frame, flags, broadcast)))<0) {
         RETURN_NULL();
     }
     RETURN_LONG(frame);
@@ -819,11 +822,12 @@ PHP_FUNCTION(elphel_compressor_run)
     long port;
     long frame=-1;
     unsigned long flags=-1;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|ll", &port, &frame,&flags) == FAILURE) {
+    long broardcast = 0;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|lll", &port, &frame, &flags, &broardcast) == FAILURE) {
         RETURN_NULL();
     }
     if (flags<0) flags=FRAMEPAIR_FORCE_NEWPROC;
-    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_CONT, frame, flags)))<0) {
+    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_CONT, frame, flags, broardcast)))<0) {
         RETURN_NULL();
     }
     RETURN_LONG(frame);
@@ -836,11 +840,12 @@ PHP_FUNCTION(elphel_compressor_stop)
     long port;
     long frame=-1;
     unsigned long flags=-1;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|ll", &port, &frame,&flags) == FAILURE) {
+    long broardcast=0;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|lll", &port, &frame, &flags, &broardcast) == FAILURE) {
         RETURN_NULL();
     }
     if (flags<0) flags=FRAMEPAIR_FORCE_NEWPROC;
-    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_STOP, frame, flags)))<0) {
+    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_STOP, frame, flags, broardcast)))<0) {
         RETURN_NULL();
     }
     RETURN_LONG(frame);
@@ -852,11 +857,12 @@ PHP_FUNCTION(elphel_compressor_frame)
     long port;
     long frame=-1;
     unsigned long flags=-1;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|ll", &port, &frame,&flags) == FAILURE) {
+    long broardcast=0;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|lll", &port, &frame,&flags, &broardcast) == FAILURE) {
         RETURN_NULL();
     }
     if (flags<0) flags=FRAMEPAIR_JUST_THIS;
-    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_SINGLE, frame, flags)))<0) {
+    if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_SINGLE, frame, flags, broardcast)))<0) {
         RETURN_NULL();
     }
     RETURN_LONG(frame);
@@ -864,11 +870,12 @@ PHP_FUNCTION(elphel_compressor_frame)
 //!reset sensor, and re-initialize it
 PHP_FUNCTION(elphel_reset_sensor) {
     long port;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &port) == FAILURE) {
+    long broardcast=0;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|l", &port,&broardcast) == FAILURE) {
         RETURN_NULL();
     }
     lseek((int) ELPHEL_G(fd_fparmsall[port]), LSEEK_FRAMEPARS_INIT, SEEK_END ); /// reset all framepars and globalPars
-    elphel_set_P_value_common (port, P_SENSOR, 0, 0, -1);
+    elphel_set_P_value_common (port, P_SENSOR, 0, 0, -1, broardcast);
     RETURN_NULL();
 }
 
@@ -896,7 +903,9 @@ PHP_FUNCTION(elphel_set_P_arr)
     int num_mmap_written=0;
     int reg_addr, reg_data, constAddNumber;
     long multiMod;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "la|ll", &port, &arr,&frame,&flags) == FAILURE) {
+    long broadcast=0;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "la|lll", &port, &arr, &frame, &flags, &broadcast) == FAILURE) {
         RETURN_LONG(num_written);
     }
     if ((port <0) || (port >= SENSOR_PORTS))
@@ -913,7 +922,8 @@ PHP_FUNCTION(elphel_set_P_arr)
     write_data=(unsigned long *) emalloc ((array_count+1)<<3);
     if (!write_data) RETURN_NULL(); /// emalloc failed
 
-    write_data[0]=FRAMEPARS_SETFRAME;
+    write_data[0]=FRAMEPARS_SETFRAME | ((broadcast << 4) & 0xf0);
+
     write_data[1]=frame;
     for(zend_hash_internal_pointer_reset_ex(arr_hash, &pointer);
             zend_hash_get_current_data_ex(arr_hash, (void**) &data, &pointer) == SUCCESS;
