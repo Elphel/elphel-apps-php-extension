@@ -904,15 +904,18 @@ PHP_FUNCTION(elphel_set_P_arr)
     int reg_addr, reg_data, constAddNumber;
     long multiMod;
     long broadcast=0;
+    unsigned long uframe;
+
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "la|lll", &port, &arr, &frame, &flags, &broadcast) == FAILURE) {
         RETURN_LONG(num_written);
     }
     if ((port <0) || (port >= SENSOR_PORTS))
         RETURN_NULL();
-    if (frame <0) {
-        frame=ELPHEL_GLOBALPARS(port, G_THIS_FRAME) + FRAME_DEAFAULT_AHEAD;
-    }
+    if      (frame == -1)  uframe = ELPHEL_GLOBALPARS(port, G_THIS_FRAME) + FRAME_DEAFAULT_AHEAD; // old: use earliest frame
+    else if (frame == -2)  uframe = 0xffffffffL; // (new nc393: use ASAP mode)
+    else                   uframe = (unsigned long) frame;
+
     flags |= (flags << 16); /// will accept flags both shifted and not shifted
     flags &=0xffff0000;
     init_sens();
@@ -924,7 +927,7 @@ PHP_FUNCTION(elphel_set_P_arr)
 
     write_data[0]=FRAMEPARS_SETFRAME | ((broadcast << 4) & 0xf0);
 
-    write_data[1]=frame;
+    write_data[1]=uframe;
     for(zend_hash_internal_pointer_reset_ex(arr_hash, &pointer);
             zend_hash_get_current_data_ex(arr_hash, (void**) &data, &pointer) == SUCCESS;
             zend_hash_move_forward_ex(arr_hash, &pointer)) {
@@ -974,7 +977,8 @@ PHP_FUNCTION(elphel_set_P_arr)
         if (rslt<0) RETURN_LONG(-errno);
         num_written=(rslt>>3) -1 ; ///actually written to driver
     }
-    RETURN_LONG(frame);
+//    RETURN_LONG(frame);
+    RETURN_LONG( (long) uframe);
 }
 
 /**
