@@ -10,3 +10,8 @@ attic/*
 generated*
 sysroots
 bitbake-logs
+
+doxygen.tag
+/image
+/scripts
+/html
