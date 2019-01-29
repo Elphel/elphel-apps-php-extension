@@ -1,91 +1,106 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
-	<storageModule moduleId="org.eclipse.cdt.core.settings">
-		<cconfiguration id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059" moduleId="org.eclipse.cdt.core.settings" name="Default">
-				<externalSettings />
-				<extensions>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser" />
-					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser" />
-					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser" />
-					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser" />
-					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser" />
-					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser" />
-				</extensions>
-			</storageModule>
-			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" description="" id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
-					<folderInfo id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059.1698506499" name="/" resourcePath="">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.base.1361950007" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.base">
-							<option id="cdt.managedbuild.option.gnu.cross.prefix.1643856183" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" />
-							<option id="cdt.managedbuild.option.gnu.cross.path.1554576622" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" />
-							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.398085647" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross" />
-							<builder arguments="php" command="${workspace_loc:/elphel-apps-php-extension/scripts/run_bitbake.sh}" enableCleanBuild="false" id="cdt.managedbuild.builder.gnu.cross.1296064386" incrementalBuildTarget="-c compile -f" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross" />
-							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.2029818847" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
-								<option id="gnu.c.compiler.option.include.paths.861510255" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/elphel-apps-php-extension/php/main}&quot;" />
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/elphel-apps-php-extension/sysroots/elphel393/usr/include-uapi}&quot;" />
-								</option>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.419446190" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="ZEND_DEBUG=0" />
-									<listOptionValue builtIn="false" value="HAVE_JSON=1" />
-									<listOptionValue builtIn="false" value="__arm__=1" />
-								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2080288843" superClass="cdt.managedbuild.tool.gnu.c.compiler.input" />
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1055849866" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
-								<option id="gnu.cpp.compiler.option.include.paths.1048628822" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/elphel-apps-php-extension/php/main}&quot;" />
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/elphel-apps-php-extension/sysroots/elphel393/usr/include-uapi}&quot;" />
-								</option>
-								<option id="gnu.cpp.compiler.option.preprocessor.def.779602450" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="ZEND_DEBUG=0" />
-									<listOptionValue builtIn="false" value="HAVE_JSON=1" />
-									<listOptionValue builtIn="false" value="__arm__=1" />
-								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2055376927" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input" />
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.2089628270" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker" />
-							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.921075502" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.524189337" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
-									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)" />
-									<additionalInput kind="additionalinput" paths="$(LIBS)" />
-								</inputType>
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.93002962" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver" />
-							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1691525308" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
-								<option id="gnu.both.asm.option.include.paths.1376284756" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/elphel-apps-php-extension/php/main}&quot;" />
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/elphel-apps-php-extension/sysroots/elphel393/usr/include-uapi}&quot;" />
-								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.631069107" superClass="cdt.managedbuild.tool.gnu.assembler.input" />
-							</tool>
-						</toolChain>
-					</folderInfo>
-					<sourceEntries>
-						<entry excluding="TSRM/tsrm_nw.c|TSRM/tsrm_win32.c|Zend/zend_static_allocator.c|ext/bcmath/|ext/calendar/|ext/com_dotnet/|ext/dba/|ext/elphel/include/|ext/enchant/|ext/ereg/regex/debug.c|ext/ereg/regex/main.c|ext/ereg/regex/split.c|ext/fileinfo/libmagic/elfclass.h|ext/fileinfo/libmagic/names.h|ext/fileinfo/libmagic/strcasestr.c|ext/ftp/|ext/gd/|ext/gmp/|ext/interbase/|ext/intl/|ext/ldap/|ext/mbstring/libmbfl/tests/|ext/mbstring/oniguruma/enc/cp1251.c|ext/mbstring/oniguruma/enc/gb18030.c|ext/mbstring/oniguruma/enc/mktable.c|ext/mbstring/oniguruma/onigposix.h|ext/mbstring/oniguruma/regposerr.c|ext/mbstring/oniguruma/regposix.c|ext/mbstring/oniguruma/testc.c|ext/mbstring/oniguruma/testu.c|ext/mbstring/oniguruma/win32/|ext/mbstring/ucgendat/|ext/mssql/|ext/mysql/mysql_mysqlnd.h|ext/mysqli/mysqli_embedded.c|ext/mysqli/mysqli_mysqlnd.h|ext/mysqlnd/config-win.h|ext/mysqlnd/mysqlnd.c|ext/mysqlnd/mysqlnd.h|ext/mysqlnd/mysqlnd_alloc.c|ext/mysqlnd/mysqlnd_alloc.h|ext/mysqlnd/mysqlnd_auth.c|ext/mysqlnd/mysqlnd_block_alloc.c|ext/mysqlnd/mysqlnd_block_alloc.h|ext/mysqlnd/mysqlnd_bt.c|ext/mysqlnd/mysqlnd_charset.c|ext/mysqlnd/mysqlnd_charset.h|ext/mysqlnd/mysqlnd_debug.c|ext/mysqlnd/mysqlnd_debug.h|ext/mysqlnd/mysqlnd_driver.c|ext/mysqlnd/mysqlnd_enum_n_def.h|ext/mysqlnd/mysqlnd_ext_plugin.c|ext/mysqlnd/mysqlnd_ext_plugin.h|ext/mysqlnd/mysqlnd_libmysql_compat.h|ext/mysqlnd/mysqlnd_loaddata.c|ext/mysqlnd/mysqlnd_net.c|ext/mysqlnd/mysqlnd_net.h|ext/mysqlnd/mysqlnd_plugin.c|ext/mysqlnd/mysqlnd_portability.h|ext/mysqlnd/mysqlnd_priv.h|ext/mysqlnd/mysqlnd_ps.c|ext/mysqlnd/mysqlnd_ps_codec.c|ext/mysqlnd/mysqlnd_result.c|ext/mysqlnd/mysqlnd_result.h|ext/mysqlnd/mysqlnd_result_meta.c|ext/mysqlnd/mysqlnd_result_meta.h|ext/mysqlnd/mysqlnd_reverse_api.c|ext/mysqlnd/mysqlnd_reverse_api.h|ext/mysqlnd/mysqlnd_statistics.c|ext/mysqlnd/mysqlnd_statistics.h|ext/mysqlnd/mysqlnd_structs.h|ext/mysqlnd/mysqlnd_wireprotocol.c|ext/mysqlnd/mysqlnd_wireprotocol.h|ext/mysqlnd/php_mysqlnd.c|ext/mysqlnd/php_mysqlnd.h|ext/oci8/|ext/odbc/|ext/opcache/|ext/openssl/|ext/pcre/pcrelib/dftables.c|ext/pcre/pcrelib/pcredemo.c|ext/pcre/pcrelib/pcreposix.c|ext/pcre/pcrelib/sljit/sljitNativeARM_64.c|ext/pcre/pcrelib/sljit/sljitNativeARM_T2_32.c|ext/pcre/pcrelib/sljit/sljitNativeMIPS_32.c|ext/pcre/pcrelib/sljit/sljitNativeMIPS_64.c|ext/pcre/pcrelib/sljit/sljitNativeMIPS_common.c|ext/pcre/pcrelib/sljit/sljitNativePPC_32.c|ext/pcre/pcrelib/sljit/sljitNativePPC_64.c|ext/pcre/pcrelib/sljit/sljitNativePPC_common.c|ext/pcre/pcrelib/sljit/sljitNativeSPARC_32.c|ext/pcre/pcrelib/sljit/sljitNativeSPARC_common.c|ext/pcre/pcrelib/sljit/sljitNativeTILEGX-encoder.c|ext/pcre/pcrelib/sljit/sljitNativeTILEGX_64.c|ext/pcre/pcrelib/sljit/sljitNativeX86_32.c|ext/pcre/pcrelib/sljit/sljitNativeX86_64.c|ext/pcre/pcrelib/sljit/sljitNativeX86_common.c|ext/pdo_dblib/|ext/pdo_firebird/|ext/pdo_mysql/php_pdo_mysql_sqlstate.h|ext/pdo_oci/|ext/pdo_odbc/|ext/pdo_pgsql/|ext/pgsql/|ext/pspell/|ext/recode/|ext/session/mod_mm.h|ext/shmop/|ext/skeleton/|ext/snmp/|ext/soap/|ext/sockets/win32_socket_constants.h|ext/sockets/windows_common.h|ext/sqlite3/libsqlite/|ext/standard/dns_win32.c|ext/standard/link_win32.c|ext/sybase_ct/|ext/sysvmsg/|ext/sysvsem/|ext/sysvshm/|ext/tidy/|ext/xmlrpc/|ext/xsl/|ext/zip/lib/php_zip_config.w32.h|main/internal_functions_nw.c|main/internal_functions_win32.c|netware/|sapi/aolserver/|sapi/apache/|sapi/apache2filter/|sapi/apache2handler/|sapi/apache_hooks/|sapi/caudium/|sapi/cli/cli_win32.c|sapi/continuity/|sapi/embed/|sapi/fpm/fpm/fpm_systemd.c|sapi/fpm/fpm/fpm_systemd.h|sapi/fpm/fpm/fpm_trace_mach.c|sapi/fpm/fpm/fpm_trace_pread.c|sapi/isapi/|sapi/litespeed/|sapi/milter/|sapi/nsapi/|sapi/phpdbg/|sapi/phttpd/|sapi/pi3web/|sapi/roxen/|sapi/thttpd/|sapi/tux/|sapi/webjames/|stub.c|win32/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="php" /></sourceEntries>
-				</configuration>
-			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings" />
-		</cconfiguration>
-	</storageModule>
-	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="elphel-apps-php-extension.null.157875629" name="elphel-apps-php-extension" />
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders" />
-	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="Default">
-			<resource resourceType="PROJECT" workspacePath="/elphel-apps-php-extension" />
-		</configuration>
-	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="" />
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1785128059;cdt.managedbuild.toolchain.gnu.cross.base.1785128059.1698506499;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1055849866;cdt.managedbuild.tool.gnu.cpp.compiler.input.2055376927">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="" />
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1785128059;cdt.managedbuild.toolchain.gnu.cross.base.1785128059.1698506499;cdt.managedbuild.tool.gnu.cross.c.compiler.2029818847;cdt.managedbuild.tool.gnu.c.compiler.input.2080288843">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="" />
-		</scannerConfigBuildInfo>
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets" />
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.settings">
+        		
+        <cconfiguration id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059">
+            			
+            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059" moduleId="org.eclipse.cdt.core.settings" name="Default">
+                				
+                <externalSettings/>
+                				
+                <extensions>
+                    					
+                    <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    				
+                </extensions>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+                				
+                <configuration buildProperties="" description="" id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+                    					
+                    <folderInfo id="cdt.managedbuild.toolchain.gnu.cross.base.1785128059.1698506499" name="/" resourcePath="">
+                        						
+                        <toolChain id="cdt.managedbuild.toolchain.gnu.cross.base.1361950007" name="Cross GCC">
+                            							
+                            <option id="cdt.managedbuild.option.gnu.cross.prefix.1643856183" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix"/>
+                            							
+                            <option id="cdt.managedbuild.option.gnu.cross.path.1554576622" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path"/>
+                            							
+                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.398085647" isAbstract="false" osList="all"/>
+                            							
+                            <builder arguments="php" command="${workspace_loc:/elphel-apps-php-extension/scripts/run_bitbake.sh}" enableCleanBuild="false" id="cdt.managedbuild.builder.gnu.cross.1296064386" incrementalBuildTarget="-c compile -f" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder"/>
+                            						
+                        </toolChain>
+                        					
+                    </folderInfo>
+                    					
+                    <sourceEntries>
+                        						
+                        <entry excluding=".pc/|TSRM/tsrm_nw.c|TSRM/tsrm_win32.c|Zend/zend_static_allocator.c|ext/bcmath/|ext/calendar/|ext/com_dotnet/|ext/dba/|ext/elphel/include/|ext/enchant/|ext/ereg/regex/debug.c|ext/ereg/regex/main.c|ext/ereg/regex/split.c|ext/fileinfo/libmagic/elfclass.h|ext/fileinfo/libmagic/names.h|ext/fileinfo/libmagic/strcasestr.c|ext/ftp/|ext/gd/|ext/gmp/|ext/interbase/|ext/intl/|ext/ldap/|ext/mbstring/libmbfl/tests/|ext/mbstring/oniguruma/enc/cp1251.c|ext/mbstring/oniguruma/enc/gb18030.c|ext/mbstring/oniguruma/enc/mktable.c|ext/mbstring/oniguruma/onigposix.h|ext/mbstring/oniguruma/regposerr.c|ext/mbstring/oniguruma/regposix.c|ext/mbstring/oniguruma/testc.c|ext/mbstring/oniguruma/testu.c|ext/mbstring/oniguruma/win32/|ext/mbstring/ucgendat/|ext/mssql/|ext/mysql/mysql_mysqlnd.h|ext/mysqli/mysqli_embedded.c|ext/mysqli/mysqli_mysqlnd.h|ext/mysqlnd/config-win.h|ext/mysqlnd/mysqlnd.c|ext/mysqlnd/mysqlnd.h|ext/mysqlnd/mysqlnd_alloc.c|ext/mysqlnd/mysqlnd_alloc.h|ext/mysqlnd/mysqlnd_auth.c|ext/mysqlnd/mysqlnd_block_alloc.c|ext/mysqlnd/mysqlnd_block_alloc.h|ext/mysqlnd/mysqlnd_bt.c|ext/mysqlnd/mysqlnd_charset.c|ext/mysqlnd/mysqlnd_charset.h|ext/mysqlnd/mysqlnd_debug.c|ext/mysqlnd/mysqlnd_debug.h|ext/mysqlnd/mysqlnd_driver.c|ext/mysqlnd/mysqlnd_enum_n_def.h|ext/mysqlnd/mysqlnd_ext_plugin.c|ext/mysqlnd/mysqlnd_ext_plugin.h|ext/mysqlnd/mysqlnd_libmysql_compat.h|ext/mysqlnd/mysqlnd_loaddata.c|ext/mysqlnd/mysqlnd_net.c|ext/mysqlnd/mysqlnd_net.h|ext/mysqlnd/mysqlnd_plugin.c|ext/mysqlnd/mysqlnd_portability.h|ext/mysqlnd/mysqlnd_priv.h|ext/mysqlnd/mysqlnd_ps.c|ext/mysqlnd/mysqlnd_ps_codec.c|ext/mysqlnd/mysqlnd_result.c|ext/mysqlnd/mysqlnd_result.h|ext/mysqlnd/mysqlnd_result_meta.c|ext/mysqlnd/mysqlnd_result_meta.h|ext/mysqlnd/mysqlnd_reverse_api.c|ext/mysqlnd/mysqlnd_reverse_api.h|ext/mysqlnd/mysqlnd_statistics.c|ext/mysqlnd/mysqlnd_statistics.h|ext/mysqlnd/mysqlnd_structs.h|ext/mysqlnd/mysqlnd_wireprotocol.c|ext/mysqlnd/mysqlnd_wireprotocol.h|ext/mysqlnd/php_mysqlnd.c|ext/mysqlnd/php_mysqlnd.h|ext/oci8/|ext/odbc/|ext/opcache/shared_alloc_win32.c|ext/pcre/pcrelib/dftables.c|ext/pcre/pcrelib/pcredemo.c|ext/pcre/pcrelib/pcreposix.c|ext/pcre/pcrelib/sljit/sljitNativeARM_64.c|ext/pcre/pcrelib/sljit/sljitNativeARM_T2_32.c|ext/pcre/pcrelib/sljit/sljitNativeMIPS_32.c|ext/pcre/pcrelib/sljit/sljitNativeMIPS_64.c|ext/pcre/pcrelib/sljit/sljitNativeMIPS_common.c|ext/pcre/pcrelib/sljit/sljitNativePPC_32.c|ext/pcre/pcrelib/sljit/sljitNativePPC_64.c|ext/pcre/pcrelib/sljit/sljitNativePPC_common.c|ext/pcre/pcrelib/sljit/sljitNativeSPARC_32.c|ext/pcre/pcrelib/sljit/sljitNativeSPARC_common.c|ext/pcre/pcrelib/sljit/sljitNativeTILEGX-encoder.c|ext/pcre/pcrelib/sljit/sljitNativeTILEGX_64.c|ext/pcre/pcrelib/sljit/sljitNativeX86_32.c|ext/pcre/pcrelib/sljit/sljitNativeX86_64.c|ext/pcre/pcrelib/sljit/sljitNativeX86_common.c|ext/pdo_dblib/|ext/pdo_firebird/|ext/pdo_mysql/php_pdo_mysql_sqlstate.h|ext/pdo_oci/|ext/pdo_odbc/|ext/pdo_pgsql/|ext/pgsql/|ext/pspell/|ext/recode/|ext/session/mod_mm.h|ext/shmop/|ext/skeleton/|ext/snmp/|ext/soap/|ext/sockets/win32_socket_constants.h|ext/sockets/windows_common.h|ext/sqlite3/libsqlite/|ext/standard/dns_win32.c|ext/standard/link_win32.c|ext/sybase_ct/|ext/sysvmsg/|ext/sysvsem/|ext/sysvshm/|ext/tidy/|ext/xmlrpc/|ext/xsl/|ext/zip/lib/php_zip_config.w32.h|main/internal_functions_nw.c|main/internal_functions_win32.c|netware/|sapi/aolserver/|sapi/apache/|sapi/apache2filter/|sapi/apache2handler/|sapi/apache_hooks/|sapi/caudium/|sapi/cli/cli_win32.c|sapi/continuity/|sapi/embed/|sapi/fpm/fpm/fpm_systemd.c|sapi/fpm/fpm/fpm_systemd.h|sapi/fpm/fpm/fpm_trace_mach.c|sapi/fpm/fpm/fpm_trace_pread.c|sapi/isapi/|sapi/litespeed/|sapi/milter/|sapi/nsapi/|sapi/phpdbg/|sapi/phttpd/|sapi/pi3web/|sapi/roxen/|sapi/thttpd/|sapi/tux/|sapi/webjames/|stub.c|win32/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="php"/>
+                        					
+                    </sourceEntries>
+                    				
+                </configuration>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+            		
+        </cconfiguration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+        		
+        <project id="elphel-apps-php-extension.null.157875629" name="elphel-apps-php-extension"/>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+    	
+    <storageModule moduleId="refreshScope" versionNumber="2">
+        		
+        <configuration configurationName="Default">
+            			
+            <resource resourceType="PROJECT" workspacePath="/elphel-apps-php-extension"/>
+            		
+        </configuration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="scannerConfiguration">
+        		
+        <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1785128059;cdt.managedbuild.toolchain.gnu.cross.base.1785128059.1698506499;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1055849866;cdt.managedbuild.tool.gnu.cpp.compiler.input.2055376927">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1785128059;cdt.managedbuild.toolchain.gnu.cross.base.1785128059.1698506499;cdt.managedbuild.tool.gnu.cross.c.compiler.2029818847;cdt.managedbuild.tool.gnu.c.compiler.input.2080288843">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        	
+    </storageModule>
+    
 </cproject>
