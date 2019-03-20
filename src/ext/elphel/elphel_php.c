@@ -1480,7 +1480,7 @@ long createExifDirectory (int rebuild) { /// build directory of pointers in the 
             numfields++;
         }
 //        php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: indx= 0x%02x ltag= 0x%08lx len = 0x%08lx  src = 0x%08lx  dst = 0x%08lx\n",
-//                __LINE__, indx, dir_table_entry.ltag, dir_table_entry.len, dir_table_entry.src, dir_table_entry.dst);
+//                __LINE__, indx, dir_table_entry.ltag, dir_table_entry.len, dir_table_entry.src, dir_table_entry.dst_exif);
 
 
     }
@@ -1512,7 +1512,7 @@ PHP_FUNCTION(elphel_get_circbuf_pointers) {
     ///Frame number is in Exif structure
     debug_numfields=createExifDirectory(0); /// make sure directory is current
     if (ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].ltag==Exif_Image_ImageNumber) /// Exif_Image_FrameNumber_Index is present in template
-        displacementInPage=ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst;
+        displacementInPage=ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif;
     else
         displacementInPage=-1; /// no frame number in Exif
 
@@ -1641,8 +1641,8 @@ PHP_FUNCTION(elphel_get_exif_elphel)
 //    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: exif_page = 0x%x\n",  __LINE__,exif_page);
 //    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: exif_page_start = 0x%x\n",  __LINE__,exif_page_start);
 //    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: Exif_Image_ImageNumber_Index = 0x%x\n",  __LINE__,Exif_Image_ImageNumber_Index);
-//    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d:  ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst = 0x%x\n",  __LINE__, ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst);
-//    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst = 0x%x\n",  __LINE__,exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst);
+//    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d:  ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif = 0x%x\n",  __LINE__, ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif);
+//    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif = 0x%x\n",  __LINE__,exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif);
 
     array_init(return_value);
 //    /exif_page_start
@@ -1650,12 +1650,12 @@ PHP_FUNCTION(elphel_get_exif_elphel)
 //    add_assoc_string(return_value, "dbg_exif_page",       exif_page,  1);
 //    add_assoc_string(return_value, "dbg_exif_page_start", exif_page_start,  1);
 //    add_assoc_string(return_value, "dbg_Exif_Image_ImageNumber_Index", Exif_Image_ImageNumber_Index,  1);
-//    add_assoc_string(return_value, "dbg_dst", ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst,  1);
-//    add_assoc_string(return_value, "dbg_offs", exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst,  1);
+//    add_assoc_string(return_value, "dbg_dst", ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif,  1);
+//    add_assoc_string(return_value, "dbg_offs", exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif,  1);
 
     if (ELPHEL_G(exif_dir)[Exif_Image_ImageDescription_Index].ltag==Exif_Image_ImageDescription) { // Exif_Image_ImageDescription is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageDescription_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageDescription_Index].dst_exif,
                 SEEK_SET);
         saferead255(ELPHEL_G(fd_exif[port]), val, ELPHEL_G(exif_dir)[Exif_Image_ImageDescription_Index].len);
         add_assoc_string(return_value, "ImageDescription", val,  1);
@@ -1663,7 +1663,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Exif_Image_FrameNumber_Index           0x13
     if (ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].ltag==Exif_Image_ImageNumber) { // Exif_Image_FrameNumber_Index is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_ImageNumber_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 4);
         sprintf (val,"%ld", (long) __cpu_to_be32( rational3[0]));
@@ -1673,7 +1673,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Exif_Image_PageNumber_Index           0x15 - mostly for testing - should be == port
     if (ELPHEL_G(exif_dir)[Exif_Image_PageNumber_Index].ltag==Exif_Image_PageNumber) { // Exif_Image_PageNumber_Index is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_PageNumber_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_PageNumber_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 4);
         sprintf (val,"%ld", (long) __cpu_to_be32( rational3[0]));
@@ -1683,7 +1683,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Exif_Image_Orientation_Index           0x15
     if (ELPHEL_G(exif_dir)[Exif_Image_Orientation_Index].ltag==Exif_Image_Orientation) { // Exif_Image_Orientation_Index is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_Orientation_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Image_Orientation_Index].dst_exif,
                 SEEK_SET);
         rational3[0]=0;
         read(ELPHEL_G(fd_exif[port]), rational3, 2);
@@ -1694,14 +1694,14 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///DateTimeOriginal (with subseconds)
     if (ELPHEL_G(exif_dir)[Exif_Photo_DateTimeOriginal_Index].ltag==Exif_Photo_DateTimeOriginal) {
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_DateTimeOriginal_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_DateTimeOriginal_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), val, 19);
         val[19]='\0';
         if (ELPHEL_G(exif_dir)[Exif_Photo_SubSecTimeOriginal_Index].ltag==Exif_Photo_SubSecTimeOriginal) {
             val[19]='.';
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_SubSecTimeOriginal_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_SubSecTimeOriginal_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), &val[20], 7);
             val[27]='\0';
@@ -1712,7 +1712,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Exif_Photo_ExposureTime
     if (ELPHEL_G(exif_dir)[Exif_Photo_ExposureTime_Index].ltag==Exif_Photo_ExposureTime) { // Exif_Photo_ExposureTime is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_ExposureTime_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_ExposureTime_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 8);
         exposure=(1.0*__cpu_to_be32( rational3[0]))/__cpu_to_be32( rational3[1]);
@@ -1723,7 +1723,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Exif_Photo_MakerNote
     if (ELPHEL_G(exif_dir)[Exif_Photo_MakerNote_Index].ltag==Exif_Photo_MakerNote) { // Exif_Photo_MakerNote is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_MakerNote_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_Photo_MakerNote_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), makerNote, 64);
         sprintf (val,"0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx,0x%08lx",
@@ -1749,7 +1749,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     /// GPS measure mode
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSMeasureMode_Index].ltag==Exif_GPSInfo_GPSMeasureMode) {
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSMeasureMode_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSMeasureMode_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), val, 1);
         val[1]='\0';
@@ -1759,13 +1759,13 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///GPS date/time
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSDateStamp_Index].ltag==Exif_GPSInfo_GPSDateStamp) {
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSDateStamp_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSDateStamp_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), val, 10);
         val[10]='\0';
         if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSTimeStamp_Index].ltag==Exif_GPSInfo_GPSTimeStamp) {
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSTimeStamp_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSTimeStamp_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), rational3, 24);
             hours=   __cpu_to_be32( rational3[0]);
@@ -1780,13 +1780,13 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///GPS Longitude
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLongitude_Index].ltag==Exif_GPSInfo_GPSLongitude) { // Exif_GPSInfo_GPSLongitude is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLongitude_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLongitude_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 24);
         longitude=__cpu_to_be32( rational3[0])/(1.0*__cpu_to_be32( rational3[1])) + __cpu_to_be32( rational3[2])/(60.0*__cpu_to_be32( rational3[3]));
         if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLongitudeRef_Index].ltag==Exif_GPSInfo_GPSLongitudeRef) {
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLongitudeRef_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLongitudeRef_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), val, 1);
             if (val[0]!= 'E') longitude=-longitude;
@@ -1797,13 +1797,13 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///GPS Latitude
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLatitude_Index].ltag==Exif_GPSInfo_GPSLatitude) { // Exif_GPSInfo_GPSLatitude is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLatitude_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLatitude_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 24);
         latitude=__cpu_to_be32( rational3[0])/(1.0*__cpu_to_be32( rational3[1])) + __cpu_to_be32( rational3[2])/(60.0*__cpu_to_be32( rational3[3]));
         if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLatitudeRef_Index].ltag==Exif_GPSInfo_GPSLatitudeRef) {
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLatitudeRef_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSLatitudeRef_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), val, 1);
             if (val[0] != 'N') latitude=-latitude;
@@ -1814,14 +1814,14 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///GPS Altitude
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSAltitude_Index].ltag==Exif_GPSInfo_GPSAltitude) { // Exif_GPSInfo_GPSAltitude is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSAltitude_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSAltitude_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 8);
         altitude=(1.0*__cpu_to_be32( rational3[0]))/__cpu_to_be32( rational3[1]);
 
         if (ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSAltitudeRef_Index].ltag==Exif_GPSInfo_GPSAltitudeRef) {
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSAltitudeRef_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_GPSAltitudeRef_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), val, 1);
             if (val[0] != '\0') altitude=-altitude;
@@ -1832,7 +1832,7 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Compass Direction (magnetic)
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassDirection_Index].ltag==Exif_GPSInfo_CompassDirection) { // Exif_GPSInfo_CompassDirection is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassDirection_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassDirection_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 8);
         heading=(1.0*__cpu_to_be32( rational3[0]))/__cpu_to_be32( rational3[1]);
@@ -1843,14 +1843,14 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Compass Roll
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassRoll_Index].ltag==Exif_GPSInfo_CompassRoll) { // Exif_GPSInfo_CompassRoll is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassRoll_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassRoll_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 8);
         roll=(1.0*__cpu_to_be32( rational3[0]))/__cpu_to_be32( rational3[1]);
 
         if (ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassRollRef_Index].ltag==Exif_GPSInfo_CompassRollRef) {
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassRollRef_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassRollRef_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), val, 1);
             if (val[0] != EXIF_COMPASS_ROLL_ASCII[0]) roll=-roll;
@@ -1862,14 +1862,14 @@ PHP_FUNCTION(elphel_get_exif_elphel)
     ///Compass Pitch
     if (ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassPitch_Index].ltag==Exif_GPSInfo_CompassPitch) { // Exif_GPSInfo_CompassPitch is present in template
         lseek (ELPHEL_G(fd_exif[port]),
-                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassPitch_Index].dst,
+                exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassPitch_Index].dst_exif,
                 SEEK_SET);
         read(ELPHEL_G(fd_exif[port]), rational3, 8);
         pitch=(1.0*__cpu_to_be32( rational3[0]))/__cpu_to_be32( rational3[1]);
 
         if (ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassPitchRef_Index].ltag==Exif_GPSInfo_CompassPitchRef) {
             lseek (ELPHEL_G(fd_exif[port]),
-                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassPitchRef_Index].dst,
+                    exif_page_start+ELPHEL_G(exif_dir)[Exif_GPSInfo_CompassPitchRef_Index].dst_exif,
                     SEEK_SET);
             read(ELPHEL_G(fd_exif[port]), val, 1);
             if (val[0] != EXIF_COMPASS_PITCH_ASCII[0]) pitch=-pitch;
@@ -1914,7 +1914,7 @@ PHP_FUNCTION(elphel_get_exif_field)
     else           found= lseek ((int) ELPHEL_G(fd_exif[port]), 0, SEEK_SET); /// Select 0 (currently being acquired) Exif page
     if (found<0) RETURN_NULL(); //exif_page may be out of range
 
-    lseek ((int) ELPHEL_G(fd_exif[port]), dir_table_entry.dst, SEEK_CUR);
+    lseek ((int) ELPHEL_G(fd_exif[port]), dir_table_entry.dst_exif, SEEK_CUR);
     rslt=emalloc(dir_table_entry.len);
     read((int) ELPHEL_G(fd_exif[port]), rslt, dir_table_entry.len);
     RETURN_STRINGL(rslt,dir_table_entry.len,0);
