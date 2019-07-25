@@ -1313,11 +1313,11 @@ PHP_FUNCTION(elphel_histogram_get_raw)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); /// mask out needed raw (fpga) bits
     index=lseek(ELPHEL_G(fd_histogram_cache), frame, SEEK_SET);    /// request histograms for frame=frame, wait until available if needed
     if (index <0) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%d, needed=0x%x)",frame,needed);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%ld, needed=0x%x)",frame,needed);
         RETURN_NULL ();
     }
     if (index >= total_hist_entries) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%d, index=%d >= %d (total_hist_entries)",frame, index, total_hist_entries);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%ld, index=%ld >= %ld (total_hist_entries)",frame, index, total_hist_entries);
         RETURN_NULL ();
     }
     packed_histogram_structure= (char*) emalloc (sizeof(struct histogram_stuct_t));
@@ -1375,11 +1375,11 @@ PHP_FUNCTION(elphel_histogram_get)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); // / mask out needed raw (fpga) bits
     index=lseek(ELPHEL_G(fd_histogram_cache), frame, SEEK_SET);    /// request histograms for frame=frame, wait until available if needed
     if (index <0) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%d, needed=0x%x)",frame,needed);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%ld, needed=0x%x)",frame,needed);
         RETURN_NULL ();
     }
     if (index >= total_hist_entries) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%d, index=%d >= %d (total_hist_entries)",frame, index, total_hist_entries);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Internal error: frame=%ld, index=%ld >= %ld (total_hist_entries)",frame, index, total_hist_entries);
         RETURN_NULL ();
     }
 
