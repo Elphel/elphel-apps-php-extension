@@ -116,7 +116,8 @@ PHP_FUNCTION(elphel_get_interframe_meta);
 PHP_FUNCTION(elphel_get_exif_elphel);
 PHP_FUNCTION(elphel_get_circbuf_pointers);
 PHP_FUNCTION(elphel_update_exif); // force to rebuild directory after Exif format was changed Usually done automatically
-
+PHP_FUNCTION(elphel_frame2tf);
+PHP_FUNCTION(elphel_tf2frame);
 
 PHP_MINIT_FUNCTION(elphel);
 PHP_MSHUTDOWN_FUNCTION(elphel);

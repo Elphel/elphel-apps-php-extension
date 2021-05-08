@@ -260,6 +260,8 @@ static zend_function_entry elphel_functions[] = {
         PHP_FE(elphel_get_exif_elphel, NULL)
         PHP_FE(elphel_update_exif, NULL)
         PHP_FE(elphel_get_circbuf_pointers, NULL)
+        PHP_FE(elphel_frame2tf, NULL)
+        PHP_FE(elphel_tf2frame, NULL)
         {NULL, NULL, NULL}
 };
 
@@ -1080,7 +1082,7 @@ PHP_FUNCTION(elphel_gamma_add_custom)
     arr_hash = Z_ARRVAL_P(arr);
     array_count = zend_hash_num_elements(arr_hash);
     if (array_count != 257) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong array length (should be 257) - %d",array_count);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong array length (should be 257) - %d", (int) array_count);
         RETURN_LONG (-999);
     }
     hash16 &= 0xffff;
@@ -1256,7 +1258,7 @@ PHP_FUNCTION(elphel_gamma_get_raw)
         RETURN_NULL ();
     }
     if (index >= GAMMA_CACHE_NUMBER) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong index (%d >= %d)",index, (int) GAMMA_CACHE_NUMBER);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong index (%d >= %d)",(int) index, (int) GAMMA_CACHE_NUMBER);
         RETURN_NULL ();
     }
     packed_gamma_structure= (char*) emalloc (sizeof(struct gamma_stuct_t));
@@ -1313,7 +1315,7 @@ PHP_FUNCTION(elphel_histogram_get_raw)
     lseek(ELPHEL_G(fd_histogram_cache), LSEEK_HIST_NEEDED + (needed & 0xff0), SEEK_END); /// mask out needed raw (fpga) bits
     index=lseek(ELPHEL_G(fd_histogram_cache), frame, SEEK_SET);    /// request histograms for frame=frame, wait until available if needed
     if (index <0) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%ld, needed=0x%x)",frame,needed);
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Requested histograms are not available (frame=%ld, needed=0x%lx)",frame,needed);
         RETURN_NULL ();
     }
     if (index >= total_hist_entries) {
@@ -1393,13 +1395,13 @@ PHP_FUNCTION(elphel_histogram_get)
     /// verify that histogram is still valid
     if (frame != ((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index].frame ) {
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Frame changed while retrieving histograms (frame requested=%d, received=%d, index=%d)",
-                frame, (int)((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index].frame, index);
+                (int) frame, (int)((struct histogram_stuct_t *) ELPHEL_G(histogram_cache))[index].frame, (int) index);
         RETURN_NULL ();
         efree (frame_histogram_structure);
     }
     /// verify that selected tables are valid
     if ((needed & frame_histogram_structure->valid ) != needed) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Not all the requested tables are available (frame=%d needed=0x%x, valid=0x%x)",
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Not all the requested tables are available (frame=%ld needed=0x%lx, valid=0x%lx)",
                 frame, needed, frame_histogram_structure->valid);
         RETURN_NULL ();
         efree (frame_histogram_structure);
@@ -2362,6 +2364,50 @@ PHP_FUNCTION(elphel_get_fpga_time) {
     dtime= ELPHEL_GLOBALPARS(0, G_SECONDS) + 0.000001*dtime;
     RETURN_DOUBLE(dtime);
 }
+
+PHP_FUNCTION(elphel_frame2tf) {
+    double cts = 0.0;
+	long port, frame=0;
+	long cframe;
+    double period_sec; // trigger period in seconds
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|l", &port, &frame) == FAILURE)
+        RETURN_NULL();
+    if ((port <0) || (port >= SENSOR_PORTS))
+        RETURN_NULL();
+	// read last compressed frame ts and frame number
+    cframe = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_FRAME);
+    cts = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_SEC) + 0.000001* ELPHEL_GLOBALPARS(port, G_COMPRESSOR_USEC);
+    if (frame > 0){ // if <=0 (or absent) return last compressed frame
+        // read trigger period (even for externally triggered slaves this value has to be defined and used for period)
+        period_sec = 0.00000001 * (((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_PERIOD]);
+        cts += (frame - cframe) * period_sec;
+    }
+    RETURN_DOUBLE(cts);
+}
+
+PHP_FUNCTION(elphel_tf2frame) {
+    double dts = 0.0;
+    double cts = 0.0;
+    double delta_ts;
+    long port;
+	long cframe;
+    double period_sec; // trigger period in seconds
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|d", &port, &dts) == FAILURE)
+        RETURN_NULL();
+    if ((port <0) || (port >= SENSOR_PORTS))
+        RETURN_NULL();
+	// read last compressed frame ts and frame number
+    cframe = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_FRAME);
+    cts = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_SEC) + 0.000001* ELPHEL_GLOBALPARS(port, G_COMPRESSOR_USEC);
+    if (dts > 0){ // if <=0 (or absent) return last compressed frame
+        // read trigger period (even for externally triggered slaves this value has to be defined and used for period)
+        period_sec = 0.00000001 * (((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_PERIOD]);
+        delta_ts = dts - cts + 0.5 * period_sec; // for rounding
+        cframe += (long) (delta_ts/period_sec);
+    }
+    RETURN_LONG(cframe);
+}
+
 #if 0
 static struct framepars_all_t test_structure;
 static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
