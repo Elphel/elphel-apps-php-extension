@@ -260,8 +260,9 @@ static zend_function_entry elphel_functions[] = {
         PHP_FE(elphel_get_exif_elphel, NULL)
         PHP_FE(elphel_update_exif, NULL)
         PHP_FE(elphel_get_circbuf_pointers, NULL)
-        PHP_FE(elphel_frame2tf, NULL)
-        PHP_FE(elphel_tf2frame, NULL)
+        PHP_FE(elphel_frame2ts, NULL)
+        PHP_FE(elphel_ts2frame, NULL)
+        PHP_FE(elphel_capture_range, NULL)
         {NULL, NULL, NULL}
 };
 
@@ -2365,10 +2366,11 @@ PHP_FUNCTION(elphel_get_fpga_time) {
     RETURN_DOUBLE(dtime);
 }
 
-PHP_FUNCTION(elphel_frame2tf) {
+PHP_FUNCTION(elphel_frame2ts) {
     double cts = 0.0;
 	long port, frame=0;
 	long cframe;
+	long trig_decimate =1;
     double period_sec; // trigger period in seconds
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|l", &port, &frame) == FAILURE)
         RETURN_NULL();
@@ -2378,19 +2380,23 @@ PHP_FUNCTION(elphel_frame2tf) {
     cframe = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_FRAME);
     cts = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_SEC) + 0.000001* ELPHEL_GLOBALPARS(port, G_COMPRESSOR_USEC);
     if (frame > 0){ // if <=0 (or absent) return last compressed frame
+    	// Read trigger decimation (used when slower sesnor is triggered by the faster one, like MT9P006 from Boson-640
+    	trig_decimate = ((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_DECIMATE] + 1;
         // read trigger period (even for externally triggered slaves this value has to be defined and used for period)
-        period_sec = 0.00000001 * (((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_PERIOD]);
+        period_sec = 0.00000001 * trig_decimate * (((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_PERIOD]);
         cts += (frame - cframe) * period_sec;
     }
     RETURN_DOUBLE(cts);
 }
+//		trig_decimate = aframepars[mchn][thisFrameNumber(mchn) & PARS_FRAMES_MASK].pars[P_TRIG_DECIMATE] + 1;
 
-PHP_FUNCTION(elphel_tf2frame) {
+PHP_FUNCTION(elphel_ts2frame) {
     double dts = 0.0;
     double cts = 0.0;
     double delta_ts;
     long port;
 	long cframe;
+	long trig_decimate =1;
     double period_sec; // trigger period in seconds
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l|d", &port, &dts) == FAILURE)
         RETURN_NULL();
@@ -2400,49 +2406,71 @@ PHP_FUNCTION(elphel_tf2frame) {
     cframe = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_FRAME);
     cts = ELPHEL_GLOBALPARS(port, G_COMPRESSOR_SEC) + 0.000001* ELPHEL_GLOBALPARS(port, G_COMPRESSOR_USEC);
     if (dts > 0){ // if <=0 (or absent) return last compressed frame
+    	// Read trigger decimation (used when slower sesnor is triggered by the faster one, like MT9P006 from Boson-640
+    	trig_decimate = ((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_DECIMATE] + 1;
         // read trigger period (even for externally triggered slaves this value has to be defined and used for period)
-        period_sec = 0.00000001 * (((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_PERIOD]);
+        period_sec = 0.00000001 * trig_decimate * (((struct framepars_t *) ELPHEL_G(framePars[port]))[cframe & PARS_FRAMES_MASK ].pars[P_TRIG_PERIOD]);
         delta_ts = dts - cts + 0.5 * period_sec; // for rounding
         cframe += (long) (delta_ts/period_sec);
     }
     RETURN_LONG(cframe);
 }
 
-#if 0
-static struct framepars_all_t test_structure;
-static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
-{
-    int port;
-    test_structure.globalPars[G_THIS_FRAME] = 999;
-    test_structure.framePars[0].pars[P_EXPOS] = 111;
-    test_structure.framePars[1].pars[P_EXPOS] = 222;
-    test_structure.framePars[2].pars[P_EXPOS] = 333;
-    test_structure.framePars[3].pars[P_EXPOS] = 444;
-    test_structure.framePars[4].pars[P_EXPOS] = 555;
-    test_structure.framePars[5].pars[P_EXPOS] = 666;
-    test_structure.framePars[6].pars[P_EXPOS] = 777;
-    test_structure.framePars[7].pars[P_EXPOS] = 888;
-
-    //ELPHEL_GLOBALPARS(G_THIS_FRAME)
-    for (port = 0; port < SENSOR_PORTS; port ++) {
-        elphel_globals->frameParsAll[port] = NULL;
-        elphel_globals->framePars[port] =    NULL;
-        elphel_globals->pastPars[port] =     NULL;
-        elphel_globals->funcs2call[port]=    NULL;
+/**
+ * Program multiple channels (according to 'port_mask') to start compressor at absolute (or relative) 'frame', run it for 'duration' frames
+ * and then stop. If 'duration'==0 - just stop compressor, if 'duration' <0 - only start.
+ * This function is intended to be executed in a background process (such as in capture_range.php) not to hold http client
+ * BUG: frame number after stop is 2 less than expected (ahead applied in wrong place?)
+ */
+PHP_FUNCTION(elphel_capture_range) {
+	long port = 0;
+	long port_mask = (1 << SENSOR_PORTS)-1;
+	long frame = 0;
+	long duration=0;
+	long this_frame = ELPHEL_GLOBALPARS(port, G_THIS_FRAME);
+	long maxahead = PARS_FRAMES_MASK - 3; // -2?
+	long ahead, frame_stop;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll|ll", &port, &port_mask, &frame, &duration) == FAILURE)
+        RETURN_NULL();
+    if (frame < (this_frame + FRAME_DEAFAULT_AHEAD)){
+    	frame =  this_frame + FRAME_DEAFAULT_AHEAD;
     }
-
-    elphel_globals->frameParsAll[0] = &test_structure;
-
-    for (port = 0; port < SENSOR_PORTS; port ++) {
-        elphel_globals->framePars[port] =          elphel_globals->frameParsAll[port]->framePars;
-        elphel_globals->pastPars[port] =           elphel_globals->frameParsAll[port]->pastPars;
-        elphel_globals->funcs2call[port]=          elphel_globals->frameParsAll[port]->func2call.pars;
-        elphel_globals->globalPars[port] =         elphel_globals->frameParsAll[port]->globalPars;
-        elphel_globals->multiSensIndex[port] =     elphel_globals->frameParsAll[port]->multiSensIndex;
-        elphel_globals->multiSensRvrsIndex[port] = elphel_globals->frameParsAll[port]->multiSensRvrsIndex; /// not yet used
+    ahead = frame - this_frame;
+    if (ahead > maxahead){
+        lseek((int) ELPHEL_G( fd_fparmsall[port]), (frame-maxahead) + LSEEK_FRAME_WAIT_ABS, SEEK_END );
+    }
+    if (duration == 1){ // single
+        if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_SINGLE, frame, FRAMEPAIR_JUST_THIS, port_mask)))<0)  {
+            RETURN_NULL();
+        }
+        RETURN_LONG(frame);
+    } else if (duration == 0){ // jst stop
+        if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_STOP, frame, FRAMEPAIR_FORCE_NEWPROC, port_mask)))<0) {
+            RETURN_NULL();
+        }
+        RETURN_LONG(frame);
+    } else if (duration < 0) {// just start
+        if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_CONT, frame, FRAMEPAIR_FORCE_NEWPROC, port_mask)))<0) {
+            RETURN_NULL();
+        }
+        RETURN_LONG(frame);
+    } else {
+    	frame_stop = frame+duration;
+        if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_CONT, frame, FRAMEPAIR_FORCE_NEWPROC, port_mask)))<0) {
+            RETURN_NULL();
+        }
+        this_frame = ELPHEL_GLOBALPARS(port, G_THIS_FRAME);
+        ahead = frame_stop - this_frame;
+        if (ahead > maxahead){
+            lseek((int) ELPHEL_G( fd_fparmsall[port]), (frame_stop - maxahead) + LSEEK_FRAME_WAIT_ABS, SEEK_END );
+        }
+        if (((frame=elphel_set_P_value_common (port, P_COMPRESSOR_RUN, COMPRESSOR_RUN_STOP, frame_stop, FRAMEPAIR_FORCE_NEWPROC, port_mask)))<0) {
+            RETURN_NULL();
+        }
+        RETURN_LONG(frame);
     }
 }
-#else
+
 
 static void php_elphel_init_histograms(void){
     int i, total_hist_entries;
@@ -2633,7 +2661,6 @@ static void php_elphel_init_globals(zend_elphel_globals *elphel_globals)
     elphel_globals->exif_size=0;
 //    php_error_docref(NULL TSRMLS_CC, E_WARNING, "%d: elphel_globals->exif_size= 0x%x\n",  __LINE__,elphel_globals->exif_size);
 }
-#endif
 
 PHP_RINIT_FUNCTION(elphel)
 {
