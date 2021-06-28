@@ -2428,7 +2428,7 @@ PHP_FUNCTION(elphel_capture_range) {
 	long frame = 0;
 	long duration=0;
 	long this_frame = ELPHEL_GLOBALPARS(port, G_THIS_FRAME);
-	long maxahead = PARS_FRAMES_MASK - 3; // -2?
+	long maxahead = PARS_FRAMES_MASK - 4; // 3; // -2?
 	long ahead, frame_stop;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ll|ll", &port, &port_mask, &frame, &duration) == FAILURE)
         RETURN_NULL();
